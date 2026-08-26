@@ -1,0 +1,7 @@
+# dsh-workspace-preview bundle patch: adds the dual-face row to the web tree.
+# The node half (lib/index.js) registers the /dsh-workspace-preview RPC channel;
+# the client-modules node half scans this row and serves
+# /plugins/dsh-workspace-preview/client.js into the browser boot graph.
+- insert:
+    - id: dsh-workspace-preview
+      name: 'dsh-workspace-preview'
