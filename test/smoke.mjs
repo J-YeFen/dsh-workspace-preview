@@ -20,7 +20,7 @@ const ctx = {
   connection: {
     rpc: {
       handle: (channel, h, options) => {
-        if (channel !== '/dsh-workspace-previewspace-preview') throw new Error(`unexpected channel ${channel}`);
+        if (channel !== '/dsh-workspace-preview') throw new Error(`unexpected channel ${channel}`);
         if (options?.authority !== 'loopback') throw new Error('expected loopback authority');
         handler = h;
         return async () => { disposed = true; };
