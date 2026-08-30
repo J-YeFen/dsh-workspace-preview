@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://badgen.net/badge/license/MIT/green"><img src="https://badgen.net/badge/license/MIT/green" alt="license"></a>
-  <a href="https://badgen.net/badge/version/0.2.1/8257D0"><img src="https://badgen.net/badge/version/0.2.1/8257D0" alt="version 0.2.1"></a>
+  <a href="https://badgen.net/badge/version/0.2.2/8257D0"><img src="https://badgen.net/badge/version/0.2.2/8257D0" alt="version 0.2.2"></a>
   <a href="https://badgen.net/badge/format/official%20bundle%20plugin/8257D0"><img src="https://badgen.net/badge/format/official%20bundle%20plugin/8257D0" alt="official bundle plugin"></a>
 </p>
 
@@ -40,6 +40,7 @@ Select a workspace in the left sidebar and column 4 shows its directory tree; cl
 |---|---|
 | Code / text | dsh's own `ReadBlock` card: line numbers + **shiki syntax highlighting** (30+ languages, same extension map as dsh's built-in read tool) + copy button + expand/collapse; first 3000 lines |
 | Markdown (`.md` / `.markdown` / `.mdx`) | Rendered GFM via dsh's `MarkdownText`: headings, lists, tables, links, KaTeX math; code fences highlighted |
+| HTML (`.html` / `.htm` / `.xhtml`) | Rendered page inside a **sandboxed iframe** (`sandbox=""`: scripts, forms, same-origin access, popups and top navigation all disabled; `referrerPolicy="no-referrer"`) — workspace HTML can never execute in the host page |
 | Images (`png jpg jpeg gif webp svg bmp ico avif`) | Inline `<img>` on a checkerboard canvas |
 | Word `.docx` | Structured preview: headings, paragraphs and tables, extracted host-side from the OOXML package |
 | Excel `.xlsx` | Sheet tabs + scrollable grid (shared strings / inline strings / numbers; ≤8 sheets, ≤500×100 cells each) |
@@ -58,7 +59,7 @@ Both panels: open-in-default-app, close, drag-resize, dark/light theme via dsh d
 ## Usage
 
 - **Browse** — column 4 follows the workspace of the current session; use the in-panel selector to pin a different workspace. Click a directory to expand it lazily, toggle dotfiles with the eye button, and refresh with the ⟳ button.
-- **Preview** — click a file: code/text renders with shiki highlighting, Markdown rendered, images inline, Office documents structured. Drag a panel's left edge to resize it; the `»` button hides the tree (re-open from the floating rail).
+- **Preview** — click a file: code/text renders with shiki highlighting, Markdown rendered, images inline, HTML pages rendered in a sandboxed iframe, Office documents structured. Drag a panel's left edge to resize it; the `»` button hides the tree (re-open from the floating rail).
 - **Edit** — with a text file open, click the pencil button (编辑). The editor shows a `●` dot while dirty; save with `⌘/Ctrl+S` or the save button, cancel with × (a confirmation guards unsaved changes). For `.json` / `.jsonc` the `{}` button pretty-prints the buffer. If the file changed on disk since you opened it, the save is refused with a conflict notice — click 重新加载 to pick up the new content.
 - **Rename** — hover a tree row and click the pencil: edit the name inline, Enter commits, Esc (or clicking away) cancels. Renaming a file that is open moves the preview along; renaming a directory re-roots its expanded children.
 - **Delete** — hover a row and click the trash button, then confirm inline. Directories are deleted **recursively** (the confirm row says so). The workspace root itself can never be renamed or deleted. There is no undo — deleted files do not go to a trash bin.
@@ -176,7 +177,11 @@ A local `file:` install follows the folder automatically — no publish action i
 
 ## 中文
 
-**dsh-workspace-preview** 是 [DeepSeek Harness (dsh)](https://github.com/deepseek-ai/deepseek-harness) 的 Web 插件：在原有布局右侧新增两列，构成 4 列工作台 —— 第 1、2 列为 dsh 原有（会话边栏 + 对话），第 3 列为**文件预览**（代码 shiki 高亮 / Markdown 渲染 / 图片内联显示 / Word·Excel·PPT 结构化预览），第 4 列为**工作区文件目录树**（跟随左侧工作区、懒加载、可隐藏、可拖宽、行内重命名与删除）。布局状态持久化于 `localStorage`（`dsh.workspacePreview.*`）。
+**dsh-workspace-preview** 是 [DeepSeek Harness (dsh)](https://github.com/deepseek-ai/deepseek-harness) 的 Web 插件：在原有布局右侧新增两列，构成 4 列工作台 —— 第 1、2 列为 dsh 原有（会话边栏 + 对话），第 3 列为**文件预览**（代码 shiki 高亮 / Markdown 渲染 / HTML 沙箱渲染 / 图片内联显示 / Word·Excel·PPT 结构化预览），第 4 列为**工作区文件目录树**（跟随左侧工作区、懒加载、可隐藏、可拖宽、行内重命名与删除）。布局状态持久化于 `localStorage`（`dsh.workspacePreview.*`）。
+
+0.2.2 新增：
+
+- **HTML 渲染预览**：`.html` / `.htm` / `.xhtml` 文件在**沙箱 iframe**（`sandbox=""`：脚本、表单、同源访问、弹窗与顶层导航全部禁用；`referrerPolicy="no-referrer"`）中渲染为页面，工作区内的 HTML 永远不会在宿主页面上下文执行任意脚本；截断文件只读并提示。
 
 0.2.1 修复：
 
@@ -193,7 +198,7 @@ A local `file:` install follows the folder automatically — no publish action i
 使用说明：
 
 - **浏览**：第 4 列目录树跟随当前会话的工作区，也可用面板内下拉固定到其他工作区；点击目录懒加载展开，眼睛按钮切换隐藏文件，⟳ 刷新。
-- **预览**：点击文件——代码/文本走 shiki 高亮卡片，Markdown 渲染，图片内联，Office 文档结构化展示。拖动面板左缘调宽，`»` 收起目录树（右缘悬浮条可重新展开）。
+- **预览**：点击文件——代码/文本走 shiki 高亮卡片，Markdown 渲染，HTML 在沙箱 iframe 中渲染为页面，图片内联，Office 文档结构化展示。拖动面板左缘调宽，`»` 收起目录树（右缘悬浮条可重新展开）。
 - **编辑**：打开文本文件后点铅笔按钮进入编辑；有未保存修改时标题旁显示 `●`，`⌘/Ctrl+S` 或保存按钮落盘，× 取消（有脏内容会先确认）；`.json` / `.jsonc` 可用 `{}` 按钮格式化。若文件在打开后被外部修改，保存会被拒绝（冲突提示），点「重新加载」获取新内容。
 - **重命名**：hover 目录树某行 → 铅笔按钮 → 行内编辑名称，Enter 提交、Esc（或点击他处）取消。重命名正在预览的文件会让预览跟随新路径；重命名目录会重建其展开子树。
 - **删除**：hover 某行 → 垃圾桶按钮 → 行内二次确认。目录**连同全部内容递归删除**（确认行有提示）。工作区根目录永远不可改名/删除；删除不进回收站，**无法撤销**。
