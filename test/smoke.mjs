@@ -234,6 +234,36 @@ try {
       res.ok === true && res.value?.kind === 'binary' && res.value?.hint === 'legacy-office');
   }
 
+  // caps: HTML arrives whole (up to 3 MiB); other text stays capped at 256 KiB
+  {
+    const bigHtml = path.join(TMP, 'big.html');
+    const htmlText = '<!doctype html><html><body>' + '<p>block</p>'.repeat(30000) + '</body></html>';
+    await fs.writeFile(bigHtml, htmlText, 'utf8');
+    const res = await handler('read', { path: bigHtml });
+    check('read(big.html) ok', res.ok === true, res.ok ? '' : res.error?.message);
+    check('read(big.html) whole (no truncation)',
+      res.ok === true && res.value?.kind === 'text' && res.value?.truncated === false &&
+      res.value?.text?.length === htmlText.length,
+      res.ok ? `kind=${res.value?.kind} truncated=${res.value?.truncated} len=${res.value?.text?.length}` : res.error?.message);
+  }
+  {
+    const bigTxt = path.join(TMP, 'big.txt');
+    const txt = 'x'.repeat(300 * 1024);
+    await fs.writeFile(bigTxt, txt, 'utf8');
+    const res = await handler('read', { path: bigTxt });
+    check('read(big.txt) still truncated at 256 KiB',
+      res.ok === true && res.value?.kind === 'text' && res.value?.truncated === true &&
+      res.value?.text?.length === 256 * 1024,
+      res.ok ? `truncated=${res.value?.truncated} len=${res.value?.text?.length}` : res.error?.message);
+  }
+  {
+    const huge = path.join(TMP, 'huge.html');
+    await fs.writeFile(huge, Buffer.alloc(3 * 1024 * 1024 + 1, 0x61));
+    const res = await handler('read', { path: huge });
+    check('read(>3 MiB html) too-large',
+      res.ok === true && res.value?.kind === 'too-large', res.ok ? `kind=${res.value?.kind}` : res.error?.message);
+  }
+
   // list: truncated flag — exactly MAX_ENTRIES entries must NOT be flagged
   {
     const dir = path.join(TMP, 'exact-cap');
