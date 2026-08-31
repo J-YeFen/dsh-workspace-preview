@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://badgen.net/badge/license/MIT/green"><img src="https://badgen.net/badge/license/MIT/green" alt="license"></a>
-  <a href="https://badgen.net/badge/version/0.2.3/8257D0"><img src="https://badgen.net/badge/version/0.2.3/8257D0" alt="version 0.2.3"></a>
+  <a href="https://badgen.net/badge/version/0.2.4/8257D0"><img src="https://badgen.net/badge/version/0.2.4/8257D0" alt="version 0.2.4"></a>
   <a href="https://badgen.net/badge/format/official%20bundle%20plugin/8257D0"><img src="https://badgen.net/badge/format/official%20bundle%20plugin/8257D0" alt="official bundle plugin"></a>
 </p>
 
@@ -178,6 +178,10 @@ A local `file:` install follows the folder automatically — no publish action i
 ## 中文
 
 **dsh-workspace-preview** 是 [DeepSeek Harness (dsh)](https://github.com/deepseek-ai/deepseek-harness) 的 Web 插件：在原有布局右侧新增两列，构成 4 列工作台 —— 第 1、2 列为 dsh 原有（会话边栏 + 对话），第 3 列为**文件预览**（代码 shiki 高亮 / Markdown 渲染 / HTML 沙箱渲染 / 图片内联显示 / Word·Excel·PPT 结构化预览），第 4 列为**工作区文件目录树**（跟随左侧工作区、懒加载、可隐藏、可拖宽、行内重命名与删除）。布局状态持久化于 `localStorage`（`dsh.workspacePreview.*`）。
+
+0.2.4 修复：
+
+- **Markdown 预览乱码**：修复 README 等含原始 HTML（`<p align="center">`、`<img>`）的 Markdown 预览时，图片被内联成 base64 data URL 后整段 HTML 以字面文本显示、出现 ~1MB base64 乱码的问题。现在交给渲染器前会剥掉原始 HTML 标签（`<br>` 换行），本地图片改用保留域名占位（`https://dsh-workspace-preview.invalid/{id}`，绝对 https 通过宿主白名单渲染为真正的 `<img>`），渲染完成后在绘制前把 src 换成 RPC 读出的 data URL；外部 http(s) 图片仍由宿主直接渲染。围栏代码块与行内代码不受影响。
 
 0.2.3 新增 / 修复：
 
