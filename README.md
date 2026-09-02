@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://badgen.net/badge/license/MIT/green"><img src="https://badgen.net/badge/license/MIT/green" alt="license"></a>
-  <a href="https://badgen.net/badge/version/0.3.0/8257D0"><img src="https://badgen.net/badge/version/0.3.0/8257D0" alt="version 0.3.0"></a>
+  <a href="https://badgen.net/badge/version/0.3.1/8257D0"><img src="https://badgen.net/badge/version/0.3.1/8257D0" alt="version 0.3.1"></a>
   <a href="https://badgen.net/badge/format/official%20bundle%20plugin/8257D0"><img src="https://badgen.net/badge/format/official%20bundle%20plugin/8257D0" alt="official bundle plugin"></a>
 </p>
 
@@ -48,7 +48,7 @@ Select a workspace in the left sidebar and column 4 shows its directory tree; cl
 
 The dispatch is a small **viewer registry** (`exts`/priority per viewer; needs: route / media / text / data) — adding a new format is one registry row plus an optional lazy chunk, no changes in the host's kind table for render-only formats.
 
-**Edit & save** — text files that were not truncated can be edited in place (⌘/Ctrl+S); saves pass back the `mtimeMs` observed at read time. The host checks the optimistic lock **first**, then writes **atomically** (temp sibling + rename) — a concurrent external change is refused with a conflict notice and a crash never leaves a half-written file. JSON format button in edit mode.
+**Edit & save** — text files that were not truncated can be edited in place inside a **CodeMirror 6 editor** (lazy chunk `/bundle/editor.js`, ~1 MB fetched on first edit; language-aware, line numbers, history, autocomplete; ⌘/Ctrl+S). Saves pass back the `mtimeMs` observed at read time. The host checks the optimistic lock **first**, then writes **atomically** (temp sibling + rename) — a concurrent external change is refused with a conflict notice and a crash never leaves a half-written file. JSON format button in edit mode.
 
 ## Architecture (v0.3)
 
@@ -66,6 +66,9 @@ lib/index.js            host: RPC endpoints + media/html/bundle routes + fences
 lib/office.js           zero-dep OOXML extractor (docx/xlsx/pptx)
 lib/client.js           browser: viewer registry + lazy chunk loader + tree/preview/edit
 lib/client-chunk-office.js  lazy chunk: Office render components + CSS (first-use fetch)
+lib/client-chunk-editor.js  lazy chunk: CodeMirror editor (built from src-editor/ via scripts/build-editor.mjs)
+src-editor/             build-time source for the editor chunk (not shipped)
+scripts/build-editor.mjs    one-time esbuild build (devDeps only; runtime stays zero-dep)
 cordis.patch.yml        single bundle insert row
 test/smoke.mjs          RPC + HTTP route + fence smoke tests (self-contained)
 ```
@@ -78,7 +81,7 @@ dsh plugin --profile web add "github:J-YeFen/dsh-workspace-preview"    # GitHub
 dsh plugin --profile web add .                                         # local checkout
 ```
 
-Restart the web process (`dsh web`) and refresh the browser. `lib/` artifacts are committed — no build step; `node --check lib/*.js && node test/smoke.mjs` is the only gate.
+Restart the web process (`dsh web`) and refresh the browser. `lib/` artifacts are committed — consumers need **no build step**. Developers re-running the CodeMirror bundle (only after editing `src-editor/` or bumping CodeMirror devDependencies): `npm install && node scripts/build-editor.mjs`, then commit the artifact. Gate: `node --check lib/*.js && node test/smoke.mjs`.
 
 ## Security
 
@@ -122,7 +125,7 @@ MIT
 
 分发走小型 **viewer 注册表**(按 exts/优先级;needs:路由/媒体/文本/数据)——加新格式 = 注册表加一行 + 可选懒 chunk,纯渲染类格式无需再动 host 的定型表。
 
-**编辑与保存** —— 未截断文本可原地编辑(⌘/Ctrl+S);保存回传读取时的 `mtimeMs`,宿主**先做乐观锁校验、再原子落盘**(临时文件 + rename):外部并发改动被拒绝并提示,崩溃也不会留下半截文件。编辑态带 JSON 格式化按钮。
+**编辑与保存** —— 未截断文本可在 **CodeMirror 6 编辑器**内编辑(懒 chunk `/bundle/editor.js`,首次点编辑才拉取 ~1MB;语法高亮/行号/历史/自动补全,⌘/Ctrl+S);保存回传读取时的 `mtimeMs`,宿主**先做乐观锁校验、再原子落盘**(临时文件 + rename):外部并发改动被拒绝并提示,崩溃也不会留下半截文件。编辑态带 JSON 格式化按钮。
 
 ## 架构(v0.3)
 
@@ -140,6 +143,9 @@ lib/index.js            host:RPC 端点 + media/html/bundle 路由 + 围栏
 lib/office.js           零依赖 OOXML 提取(docx/xlsx/pptx)
 lib/client.js           浏览器:viewer 注册表 + 懒 chunk loader + 树/预览/编辑
 lib/client-chunk-office.js  懒 chunk:Office 渲染组件 + CSS(首用拉取)
+lib/client-chunk-editor.js  懒 chunk:CodeMirror 编辑器(由 src-editor/ 经 scripts/build-editor.mjs 构建)
+src-editor/             编辑器 chunk 的构建期源码(不随包发布)
+scripts/build-editor.mjs    一次性 esbuild 构建(仅 devDeps;运行时保持零依赖)
 cordis.patch.yml        单行 bundle insert
 test/smoke.mjs          RPC + HTTP 路由 + 围栏冒烟测试(自包含)
 ```
@@ -152,7 +158,7 @@ dsh plugin --profile web add "github:J-YeFen/dsh-workspace-preview"    # GitHub
 dsh plugin --profile web add .                                         # 本地目录
 ```
 
-重启 web 进程(`dsh web`)并刷新页面生效。`lib/` 产物已提交,无构建步骤;`node --check lib/*.js && node test/smoke.mjs` 是唯一质量门。
+重启 web 进程(`dsh web`)并刷新页面生效。`lib/` 产物已提交,消费者**无需构建**。开发者要重打 CodeMirror bundle(仅在改 `src-editor/` 或升 CodeMirror devDeps 后):`npm install && node scripts/build-editor.mjs`,然后提交产物。质量门:`node --check lib/*.js && node test/smoke.mjs`。
 
 ## 安全
 

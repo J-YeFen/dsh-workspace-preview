@@ -1,7 +1,7 @@
 {
   "name": "dsh-workspace-preview",
   "description": "dsh-workspace-preview: dsh 工作台插件 —— 4 列布局的工作区文件浏览器（第 3 列文件预览：代码高亮 / Markdown 渲染（内嵌图片直连媒体路由）/ 沙箱 HTML 路由 / 图片，第 4 列可隐藏的目录树边栏，v0.3 起含文件名搜索、软链接展示、viewer 注册表 + 懒 chunk、mtimeMs 冲突安全原子写）。零依赖。",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -44,5 +44,31 @@
         "@deepseek-ai/dsh-client-connection"
       ]
     }
+  },
+  "devDependencies": {
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/commands": "^6.10.4",
+    "@codemirror/lang-cpp": "^6.0.3",
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/lang-go": "^6.0.1",
+    "@codemirror/lang-html": "^6.4.12",
+    "@codemirror/lang-java": "^6.0.2",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/lang-php": "^6.0.2",
+    "@codemirror/lang-python": "^6.2.1",
+    "@codemirror/lang-rust": "^6.0.2",
+    "@codemirror/lang-sql": "^6.10.0",
+    "@codemirror/lang-xml": "^6.1.0",
+    "@codemirror/lang-yaml": "^6.1.3",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/search": "^6.7.1",
+    "@codemirror/state": "^6.7.1",
+    "@codemirror/view": "^6.43.8",
+    "esbuild": "^0.28.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
   }
 }

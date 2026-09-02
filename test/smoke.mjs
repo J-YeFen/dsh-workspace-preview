@@ -184,6 +184,10 @@ try {
     check('bundle: etag present', typeof res.headers.etag === 'string' && res.headers.etag.startsWith('"'));
   }
   {
+    const res = await httpGet('/dsh-workspace-preview/bundle', '/dsh-workspace-preview/bundle/editor.js');
+    check('bundle: editor.js (CodeMirror) served', res.status === 200 && /createEditor/.test(res.body ?? ''), String(res.status));
+  }
+  {
     const res = await httpGet('/dsh-workspace-preview/bundle', '/dsh-workspace-preview/bundle/evil.js');
     check('bundle: unknown chunk 404', res.status === 404, String(res.status));
   }
