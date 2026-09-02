@@ -1,7 +1,7 @@
 {
   "name": "dsh-workspace-preview",
-  "description": "dsh-workspace-preview: dsh 工作台插件 —— 4 列布局的工作区文件浏览器（第 3 列文件预览：代码高亮 / Markdown 渲染 / 图片，第 4 列可隐藏的目录树边栏）",
-  "version": "0.2.4",
+  "description": "dsh-workspace-preview: dsh 工作台插件 —— 4 列布局的工作区文件浏览器（第 3 列文件预览：代码高亮 / Markdown 渲染（内嵌图片直连媒体路由）/ 沙箱 HTML 路由 / 图片，第 4 列可隐藏的目录树边栏，v0.3 起含文件名搜索、软链接展示、viewer 注册表 + 懒 chunk、mtimeMs 冲突安全原子写）。零依赖。",
+  "version": "0.3.0",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -20,7 +20,9 @@
     "workspace",
     "preview",
     "markdown",
-    "file-tree"
+    "file-tree",
+    "search",
+    "office"
   ],
   "exports": {
     ".": {
