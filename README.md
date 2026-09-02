@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://badgen.net/badge/license/MIT/green"><img src="https://badgen.net/badge/license/MIT/green" alt="license"></a>
-  <a href="https://badgen.net/badge/version/0.3.1/8257D0"><img src="https://badgen.net/badge/version/0.3.1/8257D0" alt="version 0.3.1"></a>
+  <a href="https://badgen.net/badge/version/0.3.3/8257D0"><img src="https://badgen.net/badge/version/0.3.3/8257D0" alt="version 0.3.3"></a>
   <a href="https://badgen.net/badge/format/official%20bundle%20plugin/8257D0"><img src="https://badgen.net/badge/format/official%20bundle%20plugin/8257D0" alt="official bundle plugin"></a>
 </p>
 

@@ -7,7 +7,7 @@
  * fake cordis ctx.
  * Run: node test/smoke.mjs
  */
-import { apply } from '../lib/index.js';
+import { apply, inject } from '../lib/index.js';
 import { buildDocx, buildPptx, buildXlsx } from './office-fixtures.mjs';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -54,8 +54,8 @@ const ctx = {
   },
 };
 
+check('host inject includes webRuntime (cordis proxy get guard)', inject.includes('webRuntime'), inject.join(','));
 apply(ctx);
-console.log('DEBUG routes.length after apply:', routes.length, routes.map((r) => r.path));
 if (handler === undefined) { console.log('FAIL  rpc channel registered'); process.exit(1); }
 console.log('PASS  rpc channel registered with loopback authority');
 
@@ -176,6 +176,19 @@ try {
     const res = await httpGet('/dsh-workspace-preview/html', '/dsh-workspace-preview/html/etc/passwd');
     check('html: /etc/passwd path rejected', res.status === 400, String(res.status));
   }
+  {
+    // 相对资源(HTML 内嵌图片/CSS)必须按扩展名伺服正确 content-type,
+    // 否则 nosniff + text/html 会让浏览器拒绝把图片当图片渲染
+    const asset = path.join(TMP, 'asset.png');
+    await fs.writeFile(asset, Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 9, 9, 9]));
+    const enc = asset.split('/').filter(Boolean).map((s) => encodeURIComponent(s)).join('/');
+    const res = await httpGet('/dsh-workspace-preview/html', `/dsh-workspace-preview/html/${enc}`);
+    check('html: relative asset served with image/png content-type',
+      res.status === 200 && res.headers['content-type'] === 'image/png',
+      `${res.status} ${res.headers['content-type']}`);
+    check('html: relative asset not sandboxed (no CSP header on assets)',
+      res.headers['content-security-policy'] === undefined);
+  }
 
   // ── bundle route: allowlisted chunk served, unknown 404 ──────────────────
   {
@@ -261,6 +274,17 @@ try {
     await fs.writeFile(p, buildPptx());
     const res = await handler('read', { path: p });
     check('read(pptx) two slides', res.ok === true && (res.value?.slides?.length ?? 0) === 2);
+  }
+  // office read cap regression: >3 MiB .docx must NOT be reported 'too-large'
+  // (cap is relaxed for office; a synthetic over-cap zip then fails as
+  //  "not a zip archive" instead of a size notice)
+  {
+    const p = path.join(TMP, 'big.docx');
+    await fs.writeFile(p, Buffer.concat([buildDocx(), Buffer.alloc(4 * 1024 * 1024, 0x61)]));
+    const res = await handler('read', { path: p });
+    check('read(>3 MiB docx) not too-large (office cap relaxed)',
+      !(res.ok === true && res.value?.kind === 'too-large'),
+      res.ok ? `kind=${res.value?.kind}` : res.error?.message);
   }
   {
     const p = path.join(TMP, 'old.doc');
