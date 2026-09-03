@@ -39,6 +39,9 @@ const CSS = [
   ".fx-docx-scroll{flex:1;overflow:auto;min-height:0;background:var(--dsw-alias-bg-layer-2)}",
   ".fx-docx-paper{max-width:820px;margin:6px auto;background:#fff;color:#000;min-height:calc(100% - 12px);padding:24px 32px 48px;box-shadow:0 2px 14px var(--dsw-alias-bg-mask-2)}",
   ".fx-docx-paper .docx-wrapper{background:transparent}",
+  // 抹掉 docx-preview 逐节套用的 Word 页边距(padding-top 常为 1in)与整页 min-height,
+  // 让快速预览内容贴顶开始,不再出现第一页顶部的大段留白
+  ".fx-docx-paper section.docx{padding:0 !important;min-height:0 !important}",
   // pptx 画布渲染区
   ".fx-ppt-scroll{flex:1;overflow:auto;min-height:0;padding:14px;display:flex;flex-direction:column;align-items:center;gap:14px;background:var(--dsw-alias-bg-layer-2)}",
   ".fx-ppt-slide{position:relative;flex:none;box-shadow:0 2px 14px var(--dsw-alias-bg-mask-2);background:#fff;overflow:hidden}",
@@ -361,7 +364,7 @@ globalThis.__dshChunks__['office-rich'] = (require) => {
           await renderAsync(buffer, paper, styleBox, {
             inWrapper: true,
             ignoreWidth: false,
-            ignoreHeight: false,
+            ignoreHeight: true, // 关闭逐"页"按纸张高度撑开,内容自然生长
             ignoreFonts: false,
             breakPages: false,
             renderHeaders: true,
