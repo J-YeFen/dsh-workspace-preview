@@ -302,10 +302,10 @@ globalThis.__dshChunks__['office-rich'] = (require) => {
     document.head.appendChild(tag);
   }
 
-  /** Shared toolbar row: rich-preview hint + 精确审阅 (native Office) entry. */
-  function RichToolbar({ ext, onOpenExternal }) {
+  /** Shared toolbar row: preview hint + native-Office entry. */
+  function RichToolbar({ onOpenExternal }) {
     return el('div', { className: 'fx-richtoolbar' },
-      el('span', null, `富渲染预览(.${ext}) — 快速浏览渲染结果`),
+      el('span', null, '快速预览'),
       el('span', { className: 'fx-spacer' }),
       onOpenExternal &&
         el('button', {
@@ -313,7 +313,7 @@ globalThis.__dshChunks__['office-rich'] = (require) => {
           className: 'fx-mini-btn',
           title: '在本机 Office / 默认程序中打开原始文件',
           onClick: () => onOpenExternal(),
-        }, '精确审阅:用本机 Office 打开'));
+        }, '用本机office打开'));
   }
 
   function humanFetchError(message, status) {
