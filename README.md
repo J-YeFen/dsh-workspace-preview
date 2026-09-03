@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://badgen.net/badge/license/MIT/green"><img src="https://badgen.net/badge/license/MIT/green" alt="license"></a>
-  <a href="https://badgen.net/badge/version/0.3.3/8257D0"><img src="https://badgen.net/badge/version/0.3.3/8257D0" alt="version 0.3.3"></a>
+  <a href="https://badgen.net/badge/version/0.3.4/8257D0"><img src="https://badgen.net/badge/version/0.3.4/8257D0" alt="version 0.3.4"></a>
   <a href="https://badgen.net/badge/format/official%20bundle%20plugin/8257D0"><img src="https://badgen.net/badge/format/official%20bundle%20plugin/8257D0" alt="official bundle plugin"></a>
 </p>
 
@@ -43,10 +43,11 @@ Select a workspace in the left sidebar and column 4 shows its directory tree; cl
 | Markdown | Rendered GFM via dsh's `MarkdownText`; **local images now point straight at the plugin's media route** (`<img src="/dsh-workspace-preview/media?path=…">`) — no base64, no placeholder rewriting, browser-cached |
 | HTML | Rendered page inside a **sandboxed iframe** that loads the `/html` route directly: the response carries a CSP `sandbox` header and the iframe adds the strict `sandbox=""` attribute (**dual boundary**); the URL is path-encoded so relative assets (`./style.css`, images) resolve back into the route |
 | Images | `<img>` straight from the media route (20 MiB cap; oversized files show a notice instead of a broken icon) |
+| PDF (`.pdf`) | Inline page via the **browser's built-in PDF engine** — an `<iframe>` streams the raw bytes from the media route (`application/pdf`); no sandbox attribute because Chromium/Edge refuse to run their PDF engine inside a sandboxed frame (the media route fence + the engine's own process sandbox are the boundary). Same 20 MiB cap as images |
 | Office (`.docx/.xlsx/.pptx`) | Structured preview whose **renderer lives in a lazy chunk** (`/bundle/office.js`, fetched on first office open); data is still parsed host-side by the zero-dep OOXML extractor |
 | Legacy Office / binary / oversized | Notice + open-with |
 
-The dispatch is a small **viewer registry** (`exts`/priority per viewer; needs: route / media / text / data) — adding a new format is one registry row plus an optional lazy chunk, no changes in the host's kind table for render-only formats.
+The dispatch is a small **viewer registry** (`exts`/priority per viewer; needs: route / media / pdf / text / data) — adding a new format is one registry row plus an optional lazy chunk, no changes in the host's kind table for render-only formats.
 
 **Edit & save** — text files that were not truncated can be edited in place inside a **CodeMirror 6 editor** (lazy chunk `/bundle/editor.js`, ~1 MB fetched on first edit; language-aware, line numbers, history, autocomplete; ⌘/Ctrl+S). Saves pass back the `mtimeMs` observed at read time. The host checks the optimistic lock **first**, then writes **atomically** (temp sibling + rename) — a concurrent external change is refused with a conflict notice and a crash never leaves a half-written file. JSON format button in edit mode.
 
@@ -88,6 +89,7 @@ Restart the web process (`dsh web`) and refresh the browser. `lib/` artifacts ar
 - Every path (RPC and HTTP) passes the multi-root realpath workspace fence — the browser can never read arbitrary host files.
 - HTTP routes additionally pass the browser-trust fence (loopback/trusted hosts; cross-site markers refused).
 - HTML previews are double-sandboxed (route CSP `sandbox` header + iframe `sandbox=""`); the lazy chunk route is allowlisted.
+- PDF previews stream raw bytes through the same media route, but the iframe deliberately carries **no** `sandbox` attribute — Chromium/Edge refuse to run their PDF engine in a sandboxed frame, so the boundary is the route's browser-trust fence plus the browser's own PDF-engine process sandbox (a PDF is never executed as page HTML).
 - Hard caps bound every surface: 2000 list entries, 3 MiB read/write, 256 KiB text (HTML whole ≤ 3 MiB), 20 MiB media, 50k-dir / 500-result search.
 
 ## License
@@ -120,10 +122,11 @@ MIT
 | Markdown | GFM 渲染;**本地图片直指媒体路由**(`<img src="/dsh-workspace-preview/media?path=…">`)——无 base64、无占位改写、可缓存 |
 | HTML | 沙箱 iframe **直连 /html 路由**:响应带 CSP `sandbox` 头 + iframe `sandbox=""` 属性(**双边界**);路径编码 URL,相对资源(`./style.css`、图片)可解析 |
 | 图片 | `<img>` 直连媒体路由(20 MiB 上限,超限给提示而非破图) |
+| PDF(`.pdf`) | 交给**浏览器内建 PDF 引擎**内联渲染——`<iframe>` 直连媒体路由原始字节(`application/pdf`);不带 sandbox 属性,因为 Chromium/Edge 拒绝在沙箱 iframe 里运行 PDF 引擎(边界 = 媒体路由围栏 + 引擎自身进程沙箱)。上限同图片 20 MiB |
 | Office(`.docx/.xlsx/.pptx`) | 结构化预览,**渲染组件在懒 chunk 里**(`/bundle/office.js`,首次打开才拉取);数据仍由 host 端零依赖 OOXML 解析器提取 |
 | 旧 Office/二进制/超大 | 提示 + 默认程序打开 |
 
-分发走小型 **viewer 注册表**(按 exts/优先级;needs:路由/媒体/文本/数据)——加新格式 = 注册表加一行 + 可选懒 chunk,纯渲染类格式无需再动 host 的定型表。
+分发走小型 **viewer 注册表**(按 exts/优先级;needs:路由/媒体/pdf/文本/数据)——加新格式 = 注册表加一行 + 可选懒 chunk,纯渲染类格式无需再动 host 的定型表。
 
 **编辑与保存** —— 未截断文本可在 **CodeMirror 6 编辑器**内编辑(懒 chunk `/bundle/editor.js`,首次点编辑才拉取 ~1MB;语法高亮/行号/历史/自动补全,⌘/Ctrl+S);保存回传读取时的 `mtimeMs`,宿主**先做乐观锁校验、再原子落盘**(临时文件 + rename):外部并发改动被拒绝并提示,崩溃也不会留下半截文件。编辑态带 JSON 格式化按钮。
 
@@ -165,6 +168,7 @@ dsh plugin --profile web add .                                         # 本地�
 - 所有路径(RPC 与 HTTP)过**多根 realpath 工作区围栏**——浏览器无法读取任意宿主文件。
 - HTTP 面再加**浏览器信任围栏**(loopback/信任主机;跨站标记拒绝)。
 - HTML 预览**双沙箱**(路由 CSP `sandbox` 头 + iframe `sandbox=""`);懒 chunk 路由白名单化。
+- PDF 预览同样走媒体路由取原始字节,但 iframe **刻意不带** `sandbox` 属性——Chromium/Edge 拒绝在沙箱 iframe 里运行 PDF 引擎;边界 = 路由的浏览器信任围栏 + 浏览器自己的 PDF 引擎进程沙箱(PDF 永不作为页面 HTML 执行)。
 - 硬上限兜底:2000 条目 / 3 MiB 读写 / 256 KiB 文本(HTML 整文件 ≤ 3 MiB)/ 20 MiB 媒体 / 5 万目录、500 条搜索。
 
 ## License
