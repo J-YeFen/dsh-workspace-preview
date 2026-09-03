@@ -60,7 +60,7 @@ if (handler === undefined) { console.log('FAIL  rpc channel registered'); proces
 console.log('PASS  rpc channel registered with loopback authority');
 
 const route = (p) => routes.find((r) => r.path === p);
-for (const p of ['/dsh-workspace-preview/media', '/dsh-workspace-preview/html', '/dsh-workspace-preview/bundle']) {
+for (const p of ['/dsh-workspace-preview/media', '/dsh-workspace-preview/office-raw', '/dsh-workspace-preview/html', '/dsh-workspace-preview/bundle']) {
   check(`http route registered: ${p}`, route(p) !== undefined);
 }
 
@@ -159,6 +159,32 @@ try {
     check('media: missing path query -> 400', res.status === 400, String(res.status));
   }
 
+  // ── office-raw route: whole .docx/.pptx bytes for the rich renderer ──────
+  const rawDocxPath = path.join(TMP, 'sample.docx');
+  const rawDocxBytes = buildDocx();
+  await fs.writeFile(rawDocxPath, rawDocxBytes);
+  {
+    const res = await httpGet('/dsh-workspace-preview/office-raw', `/dsh-workspace-preview/office-raw?path=${encodeURIComponent(rawDocxPath)}`);
+    check('office-raw: docx served',
+      res.status === 200 && res.headers['content-type'] === 'application/octet-stream' && (res.headers['x-content-type-options'] ?? '') === 'nosniff',
+      `${res.status} ${res.headers['content-type']}`);
+    check('office-raw: bytes round-trip', Buffer.from(res.body, 'binary').length === rawDocxBytes.length);
+  }
+  {
+    const xlsxPath = path.join(TMP, 'sample.xlsx');
+    await fs.writeFile(xlsxPath, buildXlsx());
+    const res = await httpGet('/dsh-workspace-preview/office-raw', `/dsh-workspace-preview/office-raw?path=${encodeURIComponent(xlsxPath)}`);
+    check('office-raw: .xlsx rejected (allowlist)', res.status === 400, String(res.status));
+  }
+  {
+    const res = await httpGet('/dsh-workspace-preview/office-raw', '/dsh-workspace-preview/office-raw?path=' + encodeURIComponent('/etc/hosts'));
+    check('office-raw: /etc rejected', res.status === 400, String(res.status));
+  }
+  {
+    const res = await httpGet('/dsh-workspace-preview/office-raw', '/dsh-workspace-preview/office-raw');
+    check('office-raw: missing path query -> 400', res.status === 400, String(res.status));
+  }
+
   // ── html route: encoded path, CSP header, relative segment decode ────────
   const htmlFile = path.join(TMP, 'page with space.html');
   await fs.writeFile(htmlFile, '<!doctype html><html><body><h1>hi</h1></body></html>', 'utf8');
@@ -199,6 +225,12 @@ try {
   {
     const res = await httpGet('/dsh-workspace-preview/bundle', '/dsh-workspace-preview/bundle/editor.js');
     check('bundle: editor.js (CodeMirror) served', res.status === 200 && /createEditor/.test(res.body ?? ''), String(res.status));
+  }
+  {
+    // office-rich = docx-preview + pptx canvas (esbuild bundle, artifact committed)
+    const res = await httpGet('/dsh-workspace-preview/bundle', '/dsh-workspace-preview/bundle/office-rich.js');
+    check('bundle: office-rich.js served', res.status === 200 && /__dshChunks__/.test(res.body ?? ''), String(res.status));
+    check('bundle: office-rich etag present', typeof res.headers.etag === 'string' && res.headers.etag.startsWith('"'));
   }
   {
     const res = await httpGet('/dsh-workspace-preview/bundle', '/dsh-workspace-preview/bundle/evil.js');
